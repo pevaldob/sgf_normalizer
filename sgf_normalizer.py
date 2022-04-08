@@ -46,51 +46,20 @@ class fred:
             self.body_lst.append(self.head_lst[1])
             self.body_lst.append(len(self.content)-1)
 
-
-    def old_head_parser(self):
-        '''buduje słownik nagłówka pliku sgf'''
-        #/* błędny jest podział po '\n'!
-        #/* pewniejszy jest podział po ']' z pominięciem '\\]'
-        sgfh = self.content[self.head_lst[0]:self.head_lst[1]].split('\n')
-        for ln in sgfh:
-            ln = ln.strip()
-            idx = ln.find('[')
-            if idx > 0:
-            #/* tu znajduje ostatni ']' co jest błędem przy argumentach podanych w jednej linii!
-            #/* konieczne podzielenie linii wg występujących znaków ']'
-            #/* a następnie połączenie, jeśli przed ']' występowały '\\'
-                #self.header[ln[:idx]] = ln[idx+1:ln.rfind(']')]
-
-                #/* Tu ze zmianami:
-                self.header[ln[:idx]] = ln[idx+1:ln.find(']')]
-
-
     def head_parser(self):
-        '''poprawiony parser nagłówka'''
-        segments_lst = list()
         sgfh = self.content[self.head_lst[0]:self.head_lst[1]]
-        #print sgfh
-        #print '+'*10
         cutidx = 0
-        dkey = ''
         for idc in range(len(sgfh)):
             if sgfh[idc] == ']' and not (sgfh[idc-1] == "\\"):
-                segments_lst.append(sgfh[cutidx:idc])
+                sgfh_slice = sgfh[cutidx:idc]
+                sgfh_key, sgfh_value = sgfh_slice.split('[')
+                self.header[sgfh_key.strip()] = sgfh_value.strip()
                 cutidx = idc+1
-
-        for itm in range(len(segments_lst)):
-            #print segments_lst[itm]
-            cutidx = segments_lst[itm].find('[')
-            dkey = filter(lambda x: x.isupper(), segments_lst[itm][:cutidx])
-            self.header[dkey] = segments_lst[itm][cutidx+1:]
-            #print '%s -> %s' % (dkey, self.header[dkey])
-
 
     def get_info(self):
         '''drukuje informacje na temat pliku SGF'''
         for itm in self.header.keys():
             print('%s -> %s' % (itm, self.header.get(itm, '-')))
-
 
     def new_file_name(self):
         '''buduje ścieżkę i nową nazwę pliku'''
@@ -122,7 +91,7 @@ if __name__ == '__main__':
                 print(sys.argv[i])
                 test_data = fp.read()
                 fp.close()
-            #/* nowy sktalogowany plik:
+            #/* nowy skatalogowany plik:
             sgf = fred(test_data)
             sgf.head_parser()
             with open(sgf.new_file_name(), 'w+') as fout:
